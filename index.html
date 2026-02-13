@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Travel">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Travel Planner</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVHJhdmVsIFBsYW5uZXIiLCJzaG9ydF9uYW1lIjoiVHJhdmVsIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGEwYSIsInRoZW1lX2NvbG9yIjoiI2Q0YWYzNyIsInN0YXJ0X3VybCI6Ii8iLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyUyMzBhMGEwYScvJTNFJTNDdGV4dCB4PSc1MCcgeT0nNTUnIGZvbnQtc2l6ZT0nNDAnIGZpbGw9JyUyM2Q0YWYzNycgdGV4dC1hbmNob3I9J21pZGRsZScgZm9udC1mYW1pbHk9J0FyaWFsJyUzRVQlM0MvdGV4dCUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; line-height: 1.6; }
+        .menu-toggle { position: fixed; top: 20px; left: 20px; width: 40px; height: 40px; background: #1a1a1a; border: 1px solid #d4af37; cursor: pointer; z-index: 2001; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+        .menu-toggle span { width: 20px; height: 2px; background: #d4af37; }
+        .sidebar { position: fixed; left: -300px; top: 0; width: 300px; height: 100%; background: #1a1a1a; border-right: 1px solid #d4af37; z-index: 1999; transition: left 0.3s; overflow-y: auto; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 20px; padding-top: 80px; border-bottom: 1px solid #333; }
+        .sidebar-title { font-size: 18px; color: #d4af37; font-weight: 600; }
+        .trip-list { padding: 20px 0; }
+        .trip-item { padding: 15px 20px; border-left: 3px solid transparent; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .trip-item.active { background: #2a2a2a; border-left-color: #d4af37; }
+        .trip-info { flex: 1; cursor: pointer; }
+        .trip-name { font-size: 16px; font-weight: 500; margin-bottom: 3px; }
+        .trip-dates { font-size: 12px; color: #888; }
+        .delete-trip-btn { background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 5px 10px; font-size: 11px; cursor: pointer; opacity: 0; transition: opacity 0.3s; }
+        .trip-item:hover .delete-trip-btn { opacity: 1; }
+        .add-trip-btn { margin: 20px; padding: 12px; background: #d4af37; color: #0a0a0a; border: none; cursor: pointer; font-size: 14px; font-weight: 600; width: calc(100% - 40px); }
+        .main-content { padding-top: 140px; padding-bottom: 100px; }
+        .header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); padding: 20px 20px 20px 80px; border-bottom: 1px solid #d4af37; z-index: 100; }
+        .current-trip { font-size: 20px; color: #d4af37; font-weight: 600; margin-bottom: 15px; }
+        .nav-tabs { display: flex; gap: 5px; overflow-x: auto; }
+        .nav-tab { padding: 10px 16px; background: #1a1a1a; border: 1px solid #333; color: #888; cursor: pointer; white-space: nowrap; font-size: 13px; transition: all 0.3s; }
+        .nav-tab.active { background: #2a2a2a; color: #d4af37; border-color: #d4af37; }
+        .content-section { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .content-section.active { display: block; }
+        .day-section { margin-bottom: 40px; }
+        .day-header { font-size: 24px; font-weight: 600; color: #d4af37; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #d4af37; }
+        .time-block { margin-bottom: 25px; }
+        .time-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .schedule-item { background: #1a1a1a; border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 10px; cursor: pointer; }
+        .schedule-item.custom { border-left-color: #4a9eff; }
+        .schedule-title { font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .custom-badge { background: #4a9eff; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+        .schedule-details { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+        .schedule-details.open { max-height: 2000px; margin-top: 15px; }
+        .item-actions { display: flex; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+        .action-btn { padding: 8px 16px; background: #2a2a2a; color: #d4af37; border: 1px solid #d4af37; cursor: pointer; font-size: 12px; }
+        .action-btn.delete { border-color: #ff4444; color: #ff4444; }
+        .detail-section { margin-bottom: 15px; }
+        .detail-label { font-size: 11px; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .detail-content { font-size: 14px; color: #ccc; line-height: 1.5; }
+        .map-links { display: flex; gap: 10px; margin-top: 8px; }
+        .map-link { padding: 8px 16px; background: #2a2a2a; color: #d4af37; text-decoration: none; font-size: 12px; border: 1px solid #d4af37; }
+        .info-card { background: #1a1a1a; padding: 20px; margin-bottom: 20px; border-left: 3px solid #d4af37; }
+        .info-title { font-size: 18px; font-weight: 600; color: #d4af37; margin-bottom: 15px; }
+        .info-item { margin-bottom: 15px; }
+        .info-label { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .form-input, .form-textarea { width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid #333; color: #fff; font-size: 14px; font-family: inherit; }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .flight-link { color: #d4af37; text-decoration: none; display: block; margin-bottom: 5px; }
+        .phrases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .phrase-item { background: #2a2a2a; padding: 12px; border-radius: 4px; }
+        .phrase-english { font-size: 12px; color: #888; margin-bottom: 3px; }
+        .phrase-translation { font-size: 14px; color: #d4af37; font-weight: 500; }
+        .phrase-pronunciation { font-size: 11px; color: #666; margin-top: 3px; font-style: italic; }
+        .recommendations-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid #333; }
+        .recommendations-header { font-size: 18px; color: #d4af37; margin-bottom: 15px; font-weight: 500; }
+        .recommendation-item { background: #1a1a1a; border-left: 3px solid #888; padding: 15px; margin-bottom: 10px; cursor: pointer; }
+        .recommendation-header { display: flex; justify-content: space-between; align-items: center; }
+        .recommendation-name { font-size: 15px; font-weight: 500; color: #fff; }
+        .recommendation-type { font-size: 11px; color: #888; text-transform: uppercase; }
+        .recommendation-details { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+        .recommendation-details.open { max-height: 500px; margin-top: 15px; }
+        .add-recommendation-btn { padding: 8px 16px; background: #2a2a2a; color: #4a9eff; border: 1px solid #4a9eff; cursor: pointer; font-size: 12px; margin-top: 10px; }
+        .add-button { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: #d4af37; color: #0a0a0a; border: none; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4); z-index: 1000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 3000; align-items: center; justify-content: center; }
+        .modal.open { display: flex; }
+        .modal-content { background: #1a1a1a; padding: 30px; max-width: 500px; width: 90%; border: 1px solid #d4af37; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 20px; color: #d4af37; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 12px; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-select { width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid #333; color: #fff; font-size: 14px; }
+        .form-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn { padding: 12px 24px; border: 1px solid #d4af37; background: transparent; color: #d4af37; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #d4af37; color: #0a0a0a; }
+        .btn-danger { background: #ff4444; border-color: #ff4444; color: #fff; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1998; }
+        .overlay.open { display: block; }
+        .accommodation-link { color: #d4af37; text-decoration: none; display: block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></div>
+    <div class="overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="sidebar-title">My Trips</div></div>
+        <div class="trip-list" id="tripList"></div>
+        <button class="add-trip-btn" id="addTripBtn">+ Add Trip</button>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <div class="current-trip" id="currentTripName"></div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="schedule">Schedule</button>
+                <button class="nav-tab" data-tab="info">Trip Info</button>
+                <button class="nav-tab" data-tab="phrases">Phrases</button>
+            </div>
+        </div>
+        <div id="content-container"></div>
+        <button class="add-button" id="addBtn">+</button>
+    </div>
+    <div class="modal" id="modal"></div>
+    <script>
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('data:text/javascript;base64,'+btoa(`
+        const CACHE_NAME = 'travel-v1';
+        self.addEventListener('install', e => {
+            e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['/'])));
+        });
+        self.addEventListener('fetch', e => {
+            e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+        });
+    `));
+}
+
+const INITIAL_TRIPS = {
+    budapest: {
+        name: "Budapest", dates: "Feb 17-21, 2026",
+        schedule: {
+            0: { date: "Tue 2/17", items: [
+                { time: "Afternoon", title: "Arrive 7:30 PM → Airbnb ~9 PM", transport: "Taxi/Uber from airport", notes: "Get settled in, rest after flight", misc: "" },
+                { time: "Evening", title: "Light dinner nearby", transport: "Walk", notes: "Keep it casual, jet lag recovery", misc: "" },
+                { time: "Night", title: "Optional casual bar", transport: "Walk", notes: "Only if you're feeling up for it", misc: "" }
+            ]},
+            1: { date: "Wed 2/18", items: [
+                { time: "Morning", title: "Párisi Passage → St. Stephen's Basilica (dome)", address: "Szent István tér 1, 1051 Budapest, Hungary", lat: 47.5009, lng: 19.0534, transport: "Walk", notes: "Párisi Passage is a beautiful shopping arcade. Climb the dome for city views", misc: "" },
+                { time: "Afternoon", title: "Liberty Square → Parliament → Danube walk + Shoes Memorial", address: "Shoes on the Danube Bank, Id. Antall József rkp., 1051 Budapest, Hungary", lat: 47.5079, lng: 19.0444, transport: "Walk", notes: "Shoes Memorial is a powerful Holocaust memorial right by Parliament", misc: "" },
+                { time: "Evening", title: "Wander District 5 / Váci area", address: "Váci utca, 1052 Budapest, Hungary", lat: 47.4925, lng: 19.0530, transport: "Walk", notes: "Touristy but lively pedestrian street with shops and cafés", misc: "" },
+                { time: "Night", title: "Rooftop bar (360 / St. Andrea) or river cruise", address: "360 Bar, Andrássy út 39, 1061 Budapest, Hungary", lat: 47.5032, lng: 19.0622, transport: "Walk or tram", notes: "360 Bar has great city views. River cruises show Parliament lit up at night", misc: "" }
+            ]},
+            2: { date: "Thu 2/19", items: [
+                { time: "Morning", title: "Buda Castle → Matthias Church → Fisherman's Bastion", address: "Fisherman's Bastion, Szentháromság tér, 1014 Budapest, Hungary", lat: 47.5023, lng: 19.0347, transport: "Bus 16 or funicular", notes: "All in Castle District, walking distance. Best views of city from Fisherman's Bastion", misc: "" },
+                { time: "Afternoon", title: "Lunch (Buda) → Heroes' Square", address: "Heroes' Square, Hősök tere, 1146 Budapest, Hungary", lat: 47.5145, lng: 19.0779, transport: "Metro M1", notes: "Iconic square with Millennium Monument", misc: "" },
+                { time: "Evening", title: "Széchenyi Thermal Bath", address: "Széchenyi Thermal Bath, Állatkerti krt. 9-11, 1146 Budapest, Hungary", lat: 47.5186, lng: 19.0816, transport: "Walk from Heroes' Square", notes: "Pre-book tickets online. Go late afternoon/evening for magical atmosphere", misc: "" },
+                { time: "Night", title: "Dinner → Ruin bars (District 7)", address: "Szimpla Kert, Kazinczy u. 14, 1075 Budapest, Hungary", lat: 47.4965, lng: 19.0633, transport: "Metro M2", notes: "Szimpla Kert is the most famous ruin bar. Also check out Instant-Fogas", misc: "" }
+            ]},
+            3: { date: "Fri 2/20", items: [
+                { time: "Morning", title: "New York Café", address: "New York Café, Erzsébet krt. 9-11, 1073 Budapest, Hungary", lat: 47.5076, lng: 19.0706, transport: "Metro or walk", notes: "Most ornate café in Budapest. Reserve ahead if possible", misc: "" },
+                { time: "Afternoon", title: "Jewish Quarter → Karavan Street Food → Central Market Hall", address: "Great Market Hall, Vámház krt. 1-3, 1093 Budapest, Hungary", lat: 47.4872, lng: 19.0583, transport: "Tram 47/49", notes: "Karavan is outdoor food court. Central Market: upstairs for cheap traditional food", misc: "" },
+                { time: "Evening", title: "Danube / Liberty Bridge walk or café", address: "Liberty Bridge, Szabadság híd, 1056 Budapest, Hungary", lat: 47.4855, lng: 19.0544, transport: "Walk", notes: "Beautiful green bridge. Great sunset spot", misc: "" },
+                { time: "Night", title: "Bars & pubs (District 7)", transport: "Walk", notes: "Ruin bar district - explore Kazinczy Street area", misc: "" }
+            ]},
+            4: { date: "Sat 2/21", items: [
+                { time: "Morning", title: "Breakfast", notes: "Pack for Istanbul flight", misc: "" },
+                { time: "Afternoon", title: "Flight to Istanbul", misc: "" }
+            ]}
+        },
+        phrases: [
+            { english: "Hello", translation: "Szia", pronunciation: "SEE-ah" },
+            { english: "Thank you", translation: "Köszönöm", pronunciation: "KØ-sø-nøm" },
+            { english: "Please", translation: "Kérem", pronunciation: "KAY-rem" },
+            { english: "Excuse me", translation: "Elnézést", pronunciation: "EL-nay-zayst" },
+            { english: "Yes / No", translation: "Igen / Nem", pronunciation: "EE-gen / Nem" },
+            { english: "Cheers!", translation: "Egészségedre!", pronunciation: "EH-gesh-shay-ged-reh" },
+            { english: "How much?", translation: "Mennyibe kerül?", pronunciation: "MEN-yee-beh keh-REWL" },
+            { english: "The bill, please", translation: "A számlát kérem", pronunciation: "Ah SAM-lat KAY-rem" }
+        ],
+        recommendations: { 0: [], 1: [{ name: "Café Gerbeaud", type: "Café", description: "Historic café with pastries" }], 2: [{ name: "Gellért Hill", type: "Viewpoint", description: "Panoramic city views" }], 3: [], 4: [] }
+    },
+    istanbul: {
+        name: "Istanbul", dates: "Feb 21-26, 2026",
+        schedule: {
+            0: { date: "Sat 2/21 Arrival", items: [
+                { time: "Afternoon", title: "Arrive ~3 PM → Airbnb", transport: "Metro/tram from airport", notes: "Get Istanbulkart at airport", misc: "" },
+                { time: "Evening", title: "Dinner in Karaköy", address: "Karaköy, Istanbul, Turkey", lat: 41.0242, lng: 28.9744, transport: "Tram T1 or walk", notes: "Karaköy Lokantası is excellent", misc: "" },
+                { time: "Night", title: "Bars: Cihangir / Galata", address: "Cihangir, Beyoğlu, Istanbul", lat: 41.0311, lng: 28.9803, transport: "Walk", notes: "Trendy neighborhood with rooftop bars", misc: "" }
+            ]},
+            1: { date: "Sun 2/22 Old City", items: [
+                { time: "Morning", title: "Blue Mosque → Hagia Sophia → Basilica Cistern", address: "Hagia Sophia, Sultan Ahmet, Istanbul", lat: 41.0086, lng: 28.9802, transport: "Tram T1", notes: "Go early. Pre-book Basilica Cistern", misc: "" },
+                { time: "Afternoon", title: "Süleymaniye Mosque → Spice Bazaar", address: "Süleymaniye Mosque, Istanbul", lat: 41.0165, lng: 28.9644, transport: "Walk", notes: "Less touristy with stunning views", misc: "" },
+                { time: "Evening", title: "Sunset walk Galata Bridge", address: "Galata Bridge, Istanbul", lat: 41.0197, lng: 28.9739, transport: "Walk", notes: "Walk across at sunset", misc: "" },
+                { time: "Night", title: "Rooftop: Leb-i Derya", address: "Leb-i Derya, Beyoğlu, Istanbul", lat: 41.0289, lng: 28.9742, transport: "Tram/funicular", notes: "Amazing Bosphorus views", misc: "" }
+            ]},
+            2: { date: "Mon 2/23 Local", items: [
+                { time: "Morning", title: "Grand Bazaar (early)", address: "Grand Bazaar, Istanbul", lat: 41.0108, lng: 28.9680, transport: "Tram T1", notes: "Arrive at 9 AM. Haggle expected", misc: "" },
+                { time: "Afternoon", title: "Karaköy → Galata backstreets", address: "Galata Tower, Istanbul", lat: 41.0256, lng: 28.9741, transport: "Tram T1", notes: "Explore side streets", misc: "" },
+                { time: "Evening", title: "Dinner in Beyoğlu", address: "Beyoğlu, Istanbul", lat: 41.0370, lng: 28.9784, transport: "Walk", notes: "Mikla or 360 Istanbul", misc: "" },
+                { time: "Night", title: "Meyhane in Beyoğlu", address: "Nevizade Sokak, Istanbul", lat: 41.0334, lng: 28.9779, transport: "Walk", notes: "Turkish tavern experience", misc: "" }
+            ]},
+            3: { date: "Tue 2/24 Asian Side", items: [
+                { time: "Morning", title: "Ferry → Kadıköy cafés", address: "Kadıköy, Istanbul", lat: 40.9904, lng: 29.0260, transport: "Ferry from Eminönü", notes: "Ferry is an experience itself", misc: "" },
+                { time: "Afternoon", title: "Kadıköy markets & food", address: "Kadıköy Çarşı, Istanbul", lat: 40.9883, lng: 29.0281, transport: "Walk", notes: "Çiya Sofrası for lunch", misc: "" },
+                { time: "Evening", title: "Dinner → ferry back", transport: "Ferry", notes: "Sunset ferry is beautiful", misc: "" },
+                { time: "Night", title: "Kadıköy bars", address: "Kadife Sokak, Istanbul", lat: 40.9906, lng: 29.0289, transport: "Ferry/taxi", notes: "Bar street vibe", misc: "" }
+            ]},
+            4: { date: "Wed 2/25 Farewell", items: [
+                { time: "Morning", title: "Galata Tower (optional)", address: "Galata Tower, Istanbul", lat: 41.0256, lng: 28.9741, transport: "Walk", notes: "360° city views", misc: "" },
+                { time: "Afternoon", title: "İstiklal Street → Pasaj arcades", address: "İstiklal Avenue, Istanbul", lat: 41.0343, lng: 28.9784, transport: "Walk", notes: "Main pedestrian street", misc: "" },
+                { time: "Evening", title: "Dinner in Cihangir", address: "Cihangir, Istanbul", lat: 41.0311, lng: 28.9803, transport: "Walk", notes: "Sunset cafés with Bosphorus views", misc: "" },
+                { time: "Night", title: "Final night bars", notes: "Last night!", misc: "" }
+            ]},
+            5: { date: "Thu 2/26 Departure", items: [
+                { time: "Morning", title: "Breakfast / pack", notes: "Allow 2-3 hours to airport", misc: "" }
+            ]}
+        },
+        phrases: [
+            { english: "Hello", translation: "Merhaba", pronunciation: "mer-ha-BAH" },
+            { english: "Thank you", translation: "Teşekkür ederim", pronunciation: "teh-shek-KOOR" },
+            { english: "Please", translation: "Lütfen", pronunciation: "LEWT-fen" },
+            { english: "Excuse me", translation: "Affedersiniz", pronunciation: "ah-feh-der-see-NEEZ" },
+            { english: "Yes / No", translation: "Evet / Hayır", pronunciation: "eh-VET / hah-YUHR" },
+            { english: "Cheers!", translation: "Şerefe!", pronunciation: "sheh-reh-FEH" },
+            { english: "How much?", translation: "Ne kadar?", pronunciation: "neh kah-DAHR" },
+            { english: "Water", translation: "Su", pronunciation: "soo" }
+        ],
+        recommendations: { 0: [], 1: [{ name: "Topkapı Palace", type: "Attraction", description: "Ottoman palace" }], 2: [], 3: [], 4: [], 5: [] }
+    }
+};
+
+let TRIPS = JSON.parse(localStorage.getItem('trips') || 'null') || INITIAL_TRIPS;
+if (!TRIPS.budapest || !TRIPS.istanbul) TRIPS = INITIAL_TRIPS;
+
+let currentTrip = 'budapest', currentTab = 'schedule';
+let customItems = JSON.parse(localStorage.getItem('customItems') || '{}');
+if (!customItems.budapest) customItems.budapest = [];
+if (!customItems.istanbul) customItems.istanbul = [];
+let flightInfo = JSON.parse(localStorage.getItem('flightInfo') || '{}');
+if (!flightInfo.budapest) flightInfo.budapest = {outbound:'',return:''};
+if (!flightInfo.istanbul) flightInfo.istanbul = {outbound:'',return:''};
+let accommodation = JSON.parse(localStorage.getItem('accommodation') || '{}');
+
+function save() {
+    localStorage.setItem('trips', JSON.stringify(TRIPS));
+    localStorage.setItem('customItems', JSON.stringify(customItems));
+    localStorage.setItem('flightInfo', JSON.stringify(flightInfo));
+    localStorage.setItem('accommodation', JSON.stringify(accommodation));
+}
+
+function showModal(html) { document.getElementById('modal').innerHTML = html; document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+function renderSchedule(trip) {
+    const tripData = TRIPS[trip];
+    if (!tripData || !tripData.schedule) return '<div style="padding:20px;color:#888;">No schedule data</div>';
+    let html = '';
+    Object.keys(tripData.schedule).forEach(day => {
+        const dayData = tripData.schedule[day];
+        const customs = customItems[trip]?.filter(i => i.day === day) || [];
+        const timeGroups = {'Morning':[],'Afternoon':[],'Evening':[],'Night':[]};
+        [...dayData.items, ...customs].forEach(item => {
+            if (!timeGroups[item.time]) timeGroups[item.time] = [];
+            timeGroups[item.time].push(item);
+        });
+        html += `<div class="day-section"><div class="day-header">Day ${day} — ${dayData.date}</div>`;
+        Object.keys(timeGroups).forEach(time => {
+            if (timeGroups[time].length > 0) {
+                html += `<div class="time-block"><div class="time-label">${time}</div>`;
+                timeGroups[time].forEach((item, idx) => {
+                    const id = `${trip}-${day}-${time}-${idx}`;
+                    const isRec = item.fromRecommendation === true;
+                    html += `<div class="schedule-item ${isRec?'custom':''}" data-id="${id}">
+                        <div class="schedule-title">${item.title}${isRec?'<span class="custom-badge">+</span>':''}</div>
+                        <div class="schedule-details" id="${id}">
+                            <div class="item-actions"><button class="action-btn edit-btn" data-trip="${trip}" data-day="${day}" data-time="${time}" data-idx="${idx}">Edit</button><button class="action-btn delete delete-btn" data-trip="${trip}" data-day="${day}" data-time="${time}" data-idx="${idx}">Delete</button></div>`;
+                    if (item.transport) html += `<div class="detail-section"><div class="detail-label">Transport</div><div class="detail-content">${item.transport}</div></div>`;
+                    if (item.address) html += `<div class="detail-section"><div class="detail-label">Location</div><div class="detail-content">${item.address}</div><div class="map-links"><a href="http://maps.apple.com/?daddr=${encodeURIComponent(item.address)}" target="_blank" class="map-link">Apple</a><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.address)}" target="_blank" class="map-link">Google</a></div></div>`;
+                    if (item.notes) html += `<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-content">${item.notes}</div></div>`;
+                    html += `<div class="detail-section"><div class="detail-label">My Notes</div><div class="detail-content">${item.misc||'None'}</div></div></div></div>`;
+                });
+                html += '</div>';
+            }
+        });
+        const recs = tripData.recommendations?.[day] || [];
+        if (recs.length > 0) {
+            html += `<div class="recommendations-section"><div class="recommendations-header">Recommendations</div>`;
+            recs.forEach((r, i) => {
+                const rid = `rec-${trip}-${day}-${i}`;
+                html += `<div class="recommendation-item" data-rid="${rid}"><div class="recommendation-header"><div class="recommendation-name">${r.name}</div><div class="recommendation-type">${r.type}</div></div><div class="recommendation-details" id="${rid}"><div class="detail-content">${r.description}</div><button class="add-recommendation-btn" data-name="${r.name}" data-day="${day}">+ Add</button></div></div>`;
+            });
+            html += '</div>';
+        }
+        html += '</div>';
+    });
+    return html;
+}
+
+function renderInfo(trip) {
+    const accAddr = accommodation[trip] || '';
+    const inbound = flightInfo[trip]?.return || '';
+    const outbound = flightInfo[trip]?.outbound || '';
+    let html = '<div class="info-card"><div class="info-title">Flights</div>';
+    if (inbound) html += `<div class="info-item"><div class="info-label">Inbound</div><a href="https://www.google.com/search?q=${encodeURIComponent(inbound)}" target="_blank" class="flight-link">${inbound}</a><button class="action-btn" onclick="flightInfo['${trip}'].return='';save();updateView()">Edit</button></div>`;
+    else html += `<div class="info-item"><div class="info-label">Inbound</div><input type="text" class="form-input" id="inboundInput"><button class="action-btn" onclick="flightInfo['${trip}'].return=document.getElementById('inboundInput').value;save();updateView()">Save</button></div>`;
+    if (outbound) html += `<div class="info-item"><div class="info-label">Outbound</div><a href="https://www.google.com/search?q=${encodeURIComponent(outbound)}" target="_blank" class="flight-link">${outbound}</a><button class="action-btn" onclick="flightInfo['${trip}'].outbound='';save();updateView()">Edit</button></div>`;
+    else html += `<div class="info-item"><div class="info-label">Outbound</div><input type="text" class="form-input" id="outboundInput"><button class="action-btn" onclick="flightInfo['${trip}'].outbound=document.getElementById('outboundInput').value;save();updateView()">Save</button></div>`;
+    html += '</div><div class="info-card"><div class="info-title">Accommodation</div><div class="info-item"><div class="info-label">Address</div>';
+    if (accAddr) html += `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(accAddr)}" target="_blank" class="accommodation-link">${accAddr}</a><button class="action-btn" onclick="accommodation['${trip}']='';save();updateView()">Edit</button>`;
+    else html += `<textarea class="form-textarea" id="accInput"></textarea><button class="action-btn" onclick="accommodation['${trip}']=document.getElementById('accInput').value;save();updateView()">Save</button>`;
+    html += '</div></div>';
+    return html;
+}
+
+function renderPhrases(trip) {
+    const phrases = TRIPS[trip].phrases || [];
+    let html = '<div class="info-card"><div class="info-title">Phrases</div>';
+    if (phrases.length > 0) {
+        html += '<div class="phrases-grid">';
+        phrases.forEach((p, i) => html += `<div class="phrase-item"><div class="phrase-english">${p.english}</div><div class="phrase-translation">${p.translation}</div><div class="phrase-pronunciation">${p.pronunciation}</div><div style="margin-top:10px;display:flex;gap:5px;"><button class="action-btn" onclick="editPhrase(${i})">Edit</button><button class="action-btn delete" onclick="deletePhrase(${i})">Delete</button></div></div>`);
+        html += '</div>';
+    } else html += '<div style="padding:20px;color:#888;text-align:center;">No phrases</div>';
+    html += '</div>';
+    return html;
+}
+
+function updateView() {
+    document.getElementById('currentTripName').textContent = TRIPS[currentTrip].name;
+    const container = document.getElementById('content-container');
+    let html = '<div class="content-section active">';
+    if (currentTab === 'schedule') html += renderSchedule(currentTrip);
+    else if (currentTab === 'info') html += renderInfo(currentTrip);
+    else if (currentTab === 'phrases') html += renderPhrases(currentTrip);
+    html += '</div>';
+    container.innerHTML = html;
+    
+    document.querySelectorAll('.schedule-item').forEach(el => {
+        el.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {e.stopPropagation();return;}
+            document.querySelectorAll('.schedule-details.open').forEach(d => {if(d!==this.querySelector('.schedule-details'))d.classList.remove('open');});
+            this.querySelector('.schedule-details').classList.toggle('open');
+        });
+    });
+    document.querySelectorAll('.edit-btn').forEach(el => el.addEventListener('click', function(e) {e.stopPropagation();editItem(this.dataset.trip,this.dataset.day,this.dataset.time,parseInt(this.dataset.idx));}));
+    document.querySelectorAll('.delete-btn').forEach(el => el.addEventListener('click', function(e) {e.stopPropagation();deleteItem(this.dataset.trip,this.dataset.day,this.dataset.time,parseInt(this.dataset.idx));}));
+    document.querySelectorAll('.recommendation-item').forEach(el => el.addEventListener('click', function(e) {if(e.target.tagName==='BUTTON'){e.stopPropagation();return;}this.querySelector('.recommendation-details').classList.toggle('open');}));
+    document.querySelectorAll('.add-recommendation-btn').forEach(el => el.addEventListener('click', function(e) {e.stopPropagation();addRec(this.dataset.name,this.dataset.day);}));
+    renderTripList();
+}
+
+function editItem(trip, day, time, idx) {
+    const customs = customItems[trip]?.filter(i => i.day === day) || [];
+    const timeGroups = {'Morning':[],'Afternoon':[],'Evening':[],'Night':[]};
+    [...TRIPS[trip].schedule[day].items, ...customs].forEach(item => {if(!timeGroups[item.time])timeGroups[item.time]=[];timeGroups[item.time].push(item);});
+    const item = timeGroups[time][idx];
+    showModal(`<div class="modal-content"><div class="modal-title">Edit</div>
+        <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="eTitle" value="${item.title}"></div>
+        <div class="form-group"><label class="form-label">Time</label><select class="form-select" id="eTime"><option ${item.time==='Morning'?'selected':''}>Morning</option><option ${item.time==='Afternoon'?'selected':''}>Afternoon</option><option ${item.time==='Evening'?'selected':''}>Evening</option><option ${item.time==='Night'?'selected':''}>Night</option></select></div>
+        <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="eAddr" value="${item.address||''}"></div>
+        <div class="form-group"><label class="form-label">Transport</label><input type="text" class="form-input" id="eTrans" value="${item.transport||''}"></div>
+        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="eNotes">${item.notes||''}</textarea></div>
+        <div class="form-group"><label class="form-label">My Notes</label><textarea class="form-textarea" id="eMisc">${item.misc||''}</textarea></div>
+        <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveEdit('${trip}','${day}','${time}',${idx})">Save</button></div>
+    </div>`);
+}
+function saveEdit(trip,day,time,idx) {
+    const customs = customItems[trip]?.filter(i => i.day === day) || [];
+    const timeGroups = {'Morning':[],'Afternoon':[],'Evening':[],'Night':[]};
+    [...TRIPS[trip].schedule[day].items, ...customs].forEach(item => {if(!timeGroups[item.time])timeGroups[item.time]=[];timeGroups[item.time].push(item);});
+    const item = timeGroups[time][idx];
+    item.title = document.getElementById('eTitle').value;
+    item.time = document.getElementById('eTime').value;
+    item.address = document.getElementById('eAddr').value;
+    item.transport = document.getElementById('eTrans').value;
+    item.notes = document.getElementById('eNotes').value;
+    item.misc = document.getElementById('eMisc').value;
+    if (item.custom || item.fromRecommendation) {
+        const ci = customItems[trip].findIndex(c => c.day===day && c.time===time && c.title===item.title);
+        if (ci!==-1) customItems[trip][ci] = item;
+    }
+    save();
+    updateView();
+    closeModal();
+}
+function deleteItem(trip,day,time,idx) {
+    showModal(`<div class="modal-content"><div class="modal-title">Delete?</div><p style="margin-bottom:20px;color:#ccc;">Are you sure?</p><div class="form-buttons"><button class="btn" onclick="closeModal()">No</button><button class="btn btn-danger" onclick="confirmDelete('${trip}','${day}','${time}',${idx})">Yes</button></div></div>`);
+}
+function confirmDelete(trip,day,time,idx) {
+    const customs = customItems[trip]?.filter(i => i.day === day) || [];
+    const timeGroups = {'Morning':[],'Afternoon':[],'Evening':[],'Night':[]};
+    [...TRIPS[trip].schedule[day].items, ...customs].forEach(item => {if(!timeGroups[item.time])timeGroups[item.time]=[];timeGroups[item.time].push(item);});
+    const item = timeGroups[time][idx];
+    if (item.custom || item.fromRecommendation) customItems[trip] = customItems[trip].filter(c => !(c.day===day && c.time===time && c.title===item.title));
+    save();
+    updateView();
+    closeModal();
+}
+function addRec(name, day) {
+    const opts = Object.keys(TRIPS[currentTrip].schedule).map(d => `<option ${d===day?'selected':''} value="${d}">Day ${d}</option>`).join('');
+    showModal(`<div class="modal-content"><div class="modal-title">Add to Schedule</div>
+        <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="rTitle" value="${name}"></div>
+        <div class="form-group"><label class="form-label">Day</label><select class="form-select" id="rDay">${opts}</select></div>
+        <div class="form-group"><label class="form-label">Time</label><select class="form-select" id="rTime"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select></div>
+        <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveRec()">Add</button></div>
+    </div>`);
+}
+function saveRec() {
+    if (!customItems[currentTrip]) customItems[currentTrip] = [];
+    customItems[currentTrip].push({title:document.getElementById('rTitle').value,day:document.getElementById('rDay').value,time:document.getElementById('rTime').value,address:'',notes:'',transport:'',misc:'',custom:true,fromRecommendation:true});
+    save();
+    updateView();
+    closeModal();
+}
+function editPhrase(i) {
+    const p = TRIPS[currentTrip].phrases[i];
+    showModal(`<div class="modal-content"><div class="modal-title">Edit Phrase</div>
+        <div class="form-group"><label class="form-label">English</label><input type="text" class="form-input" id="pEng" value="${p.english}"></div>
+        <div class="form-group"><label class="form-label">Translation</label><input type="text" class="form-input" id="pTrans" value="${p.translation}"></div>
+        <div class="form-group"><label class="form-label">Pronunciation</label><input type="text" class="form-input" id="pPron" value="${p.pronunciation}"></div>
+        <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="savePhrase(${i})">Save</button></div>
+    </div>`);
+}
+function savePhrase(i) {
+    TRIPS[currentTrip].phrases[i].english = document.getElementById('pEng').value;
+    TRIPS[currentTrip].phrases[i].translation = document.getElementById('pTrans').value;
+    TRIPS[currentTrip].phrases[i].pronunciation = document.getElementById('pPron').value;
+    save();
+    updateView();
+    closeModal();
+}
+function deletePhrase(i) {
+    showModal(`<div class="modal-content"><div class="modal-title">Delete?</div><p style="margin-bottom:20px;color:#ccc;">Are you sure?</p><div class="form-buttons"><button class="btn" onclick="closeModal()">No</button><button class="btn btn-danger" onclick="confirmDeletePhrase(${i})">Yes</button></div></div>`);
+}
+function confirmDeletePhrase(i) {
+    TRIPS[currentTrip].phrases.splice(i, 1);
+    save();
+    updateView();
+    closeModal();
+}
+
+function renderTripList() {
+    const list = document.getElementById('tripList');
+    list.innerHTML = '';
+    Object.keys(TRIPS).forEach(key => {
+        const trip = TRIPS[key];
+        const div = document.createElement('div');
+        div.className = `trip-item ${key === currentTrip ? 'active' : ''}`;
+        div.innerHTML = `<div class="trip-info"><div class="trip-name">${trip.name}</div><div class="trip-dates">${trip.dates}</div></div><button class="delete-trip-btn">Delete</button>`;
+        div.querySelector('.trip-info').addEventListener('click', () => {currentTrip = key;updateView();closeSidebar();});
+        div.querySelector('.delete-trip-btn').addEventListener('click', (e) => {e.stopPropagation();deleteTrip(key);});
+        list.appendChild(div);
+    });
+}
+
+function deleteTrip(key) {
+    showModal(`<div class="modal-content"><div class="modal-title">Delete ${TRIPS[key].name}?</div><p style="margin-bottom:20px;color:#ccc;">Cannot be undone</p><div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="confirmDeleteTrip('${key}')">Delete</button></div></div>`);
+}
+function confirmDeleteTrip(key) {
+    delete TRIPS[key];
+    delete customItems[key];
+    delete flightInfo[key];
+    delete accommodation[key];
+    save();
+    const remaining = Object.keys(TRIPS);
+    if (remaining.length > 0) {currentTrip = remaining[0];updateView();}
+    closeModal();
+    renderTripList();
+}
+
+updateView();
+document.getElementById('menuToggle').addEventListener('click', () => {document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');});
+document.getElementById('overlay').addEventListener('click', closeSidebar);
+document.querySelectorAll('.nav-tab').forEach(btn => btn.addEventListener('click', function() {document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));this.classList.add('active');currentTab = this.dataset.tab;updateView();}));
+document.getElementById('addBtn').addEventListener('click', () => {
+    if (currentTab === 'schedule') {
+        const opts = Object.keys(TRIPS[currentTrip].schedule).map(d => `<option value="${d}">Day ${d}</option>`).join('');
+        showModal(`<div class="modal-content"><div class="modal-title">Add Item</div>
+            <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="nTitle"></div>
+            <div class="form-group"><label class="form-label">Day</label><select class="form-select" id="nDay">${opts}</select></div>
+            <div class="form-group"><label class="form-label">Time</label><select class="form-select" id="nTime"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select></div>
+            <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="nAddr"></div>
+            <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="nNotes"></textarea></div>
+            <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveNewItem()">Add</button></div>
+        </div>`);
+    } else if (currentTab === 'phrases') {
+        showModal(`<div class="modal-content"><div class="modal-title">Add Phrase</div>
+            <div class="form-group"><label class="form-label">English</label><input type="text" class="form-input" id="npEng"></div>
+            <div class="form-group"><label class="form-label">Translation</label><input type="text" class="form-input" id="npTrans"></div>
+            <div class="form-group"><label class="form-label">Pronunciation</label><input type="text" class="form-input" id="npPron"></div>
+            <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveNewPhrase()">Add</button></div>
+        </div>`);
+    }
+});
+function saveNewItem() {
+    if (!customItems[currentTrip]) customItems[currentTrip] = [];
+    customItems[currentTrip].push({title:document.getElementById('nTitle').value,day:document.getElementById('nDay').value,time:document.getElementById('nTime').value,address:document.getElementById('nAddr').value,notes:document.getElementById('nNotes').value,transport:'',misc:'',custom:true,fromRecommendation:false});
+    save();
+    updateView();
+    closeModal();
+}
+function saveNewPhrase() {
+    if (!TRIPS[currentTrip].phrases) TRIPS[currentTrip].phrases = [];
+    TRIPS[currentTrip].phrases.push({english:document.getElementById('npEng').value,translation:document.getElementById('npTrans').value,pronunciation:document.getElementById('npPron').value});
+    save();
+    updateView();
+    closeModal();
+}
+document.getElementById('addTripBtn').addEventListener('click', () => {
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    showModal(`<div class="modal-content"><div class="modal-title">Add Trip</div>
+        <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="tName"></div>
+        <div class="form-group"><label class="form-label">Start Month</label><select class="form-select" id="tSM">${months.map((m,i)=>`<option value="${i}">${m}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Start Day</label><select class="form-select" id="tSD">${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">End Month</label><select class="form-select" id="tEM">${months.map((m,i)=>`<option value="${i}">${m}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">End Day</label><select class="form-select" id="tED">${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Year</label><select class="form-select" id="tY"><option>2026</option><option>2027</option><option>2028</option></select></div>
+        <div class="form-buttons"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveNewTrip()">Create</button></div>
+    </div>`);
+});
+function saveNewTrip() {
+    const name = document.getElementById('tName').value;
+    if (!name) {alert('Enter name');return;}
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const sm = parseInt(document.getElementById('tSM').value);
+    const sd = parseInt(document.getElementById('tSD').value);
+    const em = parseInt(document.getElementById('tEM').value);
+    const ed = parseInt(document.getElementById('tED').value);
+    const year = document.getElementById('tY').value;
+    const daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+    let numDays = 0;
+    if (sm === em) numDays = ed - sd + 1;
+    else {numDays = daysInMonth[sm] - sd + 1;for (let m = sm + 1; m < em; m++) numDays += daysInMonth[m];numDays += ed;}
+    const key = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    const schedule = {};
+    const recommendations = {};
+    let cm = sm, cd = sd;
+    for (let i = 0; i < numDays; i++) {
+        schedule[i] = {date:`${months[cm]} ${cd}`,items:[]};
+        recommendations[i] = [];
+        cd++;
+        if (cd > daysInMonth[cm]) {cd = 1;cm++;}
+    }
+    TRIPS[key] = {name,dates:`${months[sm]} ${sd}-${ed}, ${year}`,schedule,phrases:[],recommendations};
+    customItems[key] = [];
+    flightInfo[key] = {outbound:'',return:''};
+    accommodation[key] = '';
+    save();
+    currentTrip = key;
+    updateView();
+    closeSidebar();
+    closeModal();
+}
+    </script>
+</body>
+</html>
